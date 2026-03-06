@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Add Book{% endblock %}
+{% block page_title %}Add New Book{% endblock %}
+
+{% block content %}
+<div class="card form-card">
+    <form method="POST" class="styled-form" id="add-book-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="title">Book Title</label>
+                <input type="text" id="title" name="title" placeholder="e.g. The Great Gatsby" required>
+            </div>
+            <div class="form-group">
+                <label for="author">Author</label>
+                <input type="text" id="author" name="author" placeholder="e.g. F. Scott Fitzgerald" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="category">Category</label>
+                <input type="text" id="category" name="category" placeholder="e.g. Fiction" required>
+            </div>
+            <div class="form-group">
+                <label for="isbn">ISBN</label>
+                <input type="text" id="isbn" name="isbn" placeholder="e.g. 978-3-16-148410-0" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="quantity">Quantity</label>
+                <input type="number" id="quantity" name="quantity" value="1" min="1" required>
+            </div>
+            <div class="form-group"></div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add Book</button>
+            <a href="{{ url_for('admin.books') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

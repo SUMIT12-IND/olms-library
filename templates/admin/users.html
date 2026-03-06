@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Manage Users{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>👥 Registered Users</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table" id="users-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong>{{ user.name }}</strong></td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.created_at.strftime('%d %b %Y') }}</td>
+                    <td>
+                        {% if user.is_blocked %}
+                        <span class="badge badge-danger">Blocked</span>
+                        {% else %}
+                        <span class="badge badge-success">Active</span>
+                        {% endif %}
+                    </td>
+                    <td class="action-cell">
+                        <form method="POST" action="{{ url_for('admin.block_user_route', user_id=user.id) }}"
+                            style="display:inline">
+                            {% if user.is_blocked %}
+                            <input type="hidden" name="action" value="unblock">
+                            <button type="submit" class="btn btn-sm btn-success">Unblock</button>
+                            {% else %}
+                            <input type="hidden" name="action" value="block">
+                            <button type="submit" class="btn btn-sm btn-warning">Block</button>
+                            {% endif %}
+                        </form>
+                        <form method="POST" action="{{ url_for('admin.delete_user_route', user_id=user.id) }}"
+                            style="display:inline"
+                            onsubmit="return confirm('Delete this user? All their data will be removed.')">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="empty-state">No users registered yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

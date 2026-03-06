@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}My Books{% endblock %}
+{% block page_title %}My Books{% endblock %}
+{% block content %}
+
+<!-- Fines Alert -->
+{% if fines %}
+{% set unpaid = fines | selectattr('is_paid', 'equalto', 0) | list %}
+{% if unpaid %}
+<div class="alert alert-danger">
+    <strong>💰 You have unpaid fines!</strong>
+    Total: Rs. {{ "%.2f"|format(unpaid|sum(attribute='amount')) }}. Contact the library to pay.
+</div>
+{% endif %}
+{% endif %}
+
+<div class="section-header">
+    <h3>Book History</h3>
+    <input type="text" id="bookSearch" class="table-search" placeholder="Search your books..."
+        oninput="filterTable('bookSearch','bookTable')">
+</div>
+
+{% if books %}
+<div class="table-responsive">
+    <table class="data-table" id="bookTable">
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Author</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in books %}
+            <tr>
+                <td>{{ b.book_title }}</td>
+                <td>{{ b.book_author }}</td>
+                <td>{{ b.issue_date.strftime('%b %d, %Y') if b.issue_date else '-' }}</td>
+                <td>{{ b.due_date.strftime('%b %d, %Y') if b.due_date else '-' }}</td>
+                <td>{{ b.return_date.strftime('%b %d, %Y') if b.return_date else '-' }}</td>
+                <td>
+                    {% if b.status == 'issued' %}
+                    {% if b.overdue_days > 0 %}
+                    <span class="badge badge-danger">Overdue ({{ b.overdue_days }}d)</span>
+                    {% else %}
+                    <span class="badge badge-success">Issued</span>
+                    {% endif %}
+                    {% elif b.status == 'returned' %}
+                    <span class="badge badge-secondary">Returned</span>
+                    {% elif b.status == 'requested' %}
+                    <span class="badge badge-warning">Requested</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <span class="empty-icon">📚</span>
+    <p>You haven't borrowed any books yet.</p>
+</div>
+{% endif %}
+
+<!-- Fines Detail -->
+{% if fines %}
+<div class="section" style="margin-top: 2rem;">
+    <h3 class="section-title">Fine History</h3>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Book</th>
+                    <th>Due Date</th>
+                    <th>Fine</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in fines %}
+                <tr>
+                    <td>{{ f.book_title }}</td>
+                    <td>{{ f.due_date.strftime('%b %d, %Y') if f.due_date else '-' }}</td>
+                    <td>Rs. {{ "%.2f"|format(f.amount) }}</td>
+                    <td>
+                        {% if f.is_paid %}
+                        <span class="badge badge-success">Paid</span>
+                        {% else %}
+                        <span class="badge badge-danger">Unpaid</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}OLMS{% endblock %} — Online Library</title>
+    <meta name="description" content="Online Library Management System – manage books, users, and lending with ease.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    {% if session.get('user_id') %}
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">📚</span>
+            <h1>OLMS</h1>
+        </div>
+
+        <nav class="sidebar-nav">
+            {% if session.get('role') == 'admin' %}
+            <a href="{{ url_for('admin.dashboard') }}"
+                class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                <span class="nav-icon">📊</span> Dashboard
+            </a>
+            <a href="{{ url_for('admin.books') }}"
+                class="nav-link {% if 'book' in request.endpoint %}active{% endif %}">
+                <span class="nav-icon">📖</span> Books
+            </a>
+            <a href="{{ url_for('admin.users') }}"
+                class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
+                <span class="nav-icon">👥</span> Users
+            </a>
+            <a href="{{ url_for('admin.issue_book_route') }}"
+                class="nav-link {% if request.endpoint == 'admin.issue_book_route' %}active{% endif %}">
+                <span class="nav-icon">📤</span> Issue Book
+            </a>
+            <a href="{{ url_for('admin.reports') }}"
+                class="nav-link {% if request.endpoint == 'admin.reports' %}active{% endif %}">
+                <span class="nav-icon">📋</span> Reports
+            </a>
+            <a href="{{ url_for('admin.fines') }}"
+                class="nav-link {% if request.endpoint == 'admin.fines' %}active{% endif %}">
+                <span class="nav-icon">💰</span> Fines
+            </a>
+            <a href="{{ url_for('admin.scan') }}"
+                class="nav-link {% if request.endpoint == 'admin.scan' %}active{% endif %}">
+                <span class="nav-icon">📷</span> Scan QR
+            </a>
+            <a href="{{ url_for('admin.chat_list') }}"
+                class="nav-link {% if 'chat' in request.endpoint %}active{% endif %}">
+                <span class="nav-icon">💬</span> Chat
+            </a>
+            {% else %}
+            <a href="{{ url_for('user.dashboard') }}"
+                class="nav-link {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
+                <span class="nav-icon">📊</span> Dashboard
+            </a>
+            <a href="{{ url_for('user.search') }}"
+                class="nav-link {% if request.endpoint == 'user.search' %}active{% endif %}">
+                <span class="nav-icon">🔍</span> Search Books
+            </a>
+            <a href="{{ url_for('user.my_books') }}"
+                class="nav-link {% if request.endpoint == 'user.my_books' %}active{% endif %}">
+                <span class="nav-icon">📚</span> My Books
+            </a>
+            <a href="{{ url_for('user.library') }}"
+                class="nav-link {% if request.endpoint == 'user.library' %}active{% endif %}">
+                <span class="nav-icon">🏛️</span> Virtual Library
+            </a>
+            <a href="{{ url_for('user.notifications') }}"
+                class="nav-link {% if request.endpoint == 'user.notifications' %}active{% endif %}">
+                <span class="nav-icon">🔔</span> Notifications
+            </a>
+            <a href="{{ url_for('user.chat') }}" class="nav-link {% if 'chat' in request.endpoint %}active{% endif %}">
+                <span class="nav-icon">💬</span> Chat
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <span class="user-avatar">{{ session.get('user_name', 'U')[0] }}</span>
+                <div class="user-details">
+                    <span class="user-name">{{ session.get('user_name') }}</span>
+                    <span class="user-role">{{ session.get('role', '') | capitalize }}</span>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="nav-link logout-link">
+                <span class="nav-icon">🚪</span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"
+                aria-label="Toggle menu">☰</button>
+            <h2 class="page-title">{% block page_title %}{% endblock %}</h2>
+            <div class="top-bar-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"
+                    title="Toggle dark/light mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+                {{ message }}
+                <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="content-area">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    {% else %}
+    {# ── Auth pages (no sidebar) ── #}
+    <main class="auth-wrapper">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+                {{ message }}
+                <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block auth_content %}{% endblock %}
+    </main>
+    {% endif %}
+
+    <script>
+        // ── Theme Toggle ─────────────────────────────
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('olms-theme', next);
+            updateThemeIcon(next);
+        }
+        function updateThemeIcon(theme) {
+            const icon = document.querySelector('.theme-icon');
+            if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        (function () {
+            const saved = localStorage.getItem('olms-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            updateThemeIcon(saved);
+        })();
+
+        // ── Auto-dismiss flash messages ──────────────
+        document.querySelectorAll('.flash').forEach(function (el) {
+            setTimeout(function () { el.style.opacity = '0'; setTimeout(function () { el.remove(); }, 400); }, 5000);
+        });
+
+        // ── Universal Table Search (Feature 4) ──────
+        function filterTable(inputId, tableId) {
+            const filter = document.getElementById(inputId).value.toLowerCase();
+            const rows = document.getElementById(tableId).getElementsByTagName('tr');
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                let match = false;
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+                        match = true;
+                        break;
+                    }
+                }
+                rows[i].style.display = match ? '' : 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>

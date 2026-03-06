@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Admin Chat{% endblock %}
+{% block page_title %}Messages (Admin View){% endblock %}
+{% block content %}
+<div class="admin-chat-layout">
+    {# ── Left sidebar: conversations + new chat ── #}
+    <div class="chat-user-list">
+        <div class="chat-list-header">
+            <h3>Conversations</h3>
+            <button class="btn btn-sm btn-primary"
+                onclick="document.getElementById('newChatModal').classList.add('show')">+ New</button>
+        </div>
+
+        {% if chats %}
+        {% for user in chats %}
+        <a href="{{ url_for('admin.chat_with_user', user_id=user.id) }}"
+            class="chat-user-item {% if active_chat == user.id %}active{% endif %}">
+            <span class="chat-user-avatar">{{ user.name[0] }}</span>
+            <div class="chat-user-info">
+                <span class="chat-user-name">{{ user.name }}</span>
+                <small>{{ user.role | capitalize }}</small>
+            </div>
+            {% if user.unread > 0 %}
+            <span class="chat-unread-badge">{{ user.unread }}</span>
+            {% endif %}
+        </a>
+        {% endfor %}
+        {% else %}
+        <p class="chat-empty">No conversations yet. Click <strong>+ New</strong> to start one!</p>
+        {% endif %}
+    </div>
+
+    {# ── Right side: active conversation ── #}
+    <div class="chat-container">
+        {% if active_chat %}
+        <div class="chat-messages" id="chatMessages">
+            {% for m in messages %}
+            <div class="chat-bubble {% if m.sender_id == session.get('user_id') %}sent{% else %}received{% endif %}">
+                <div class="bubble-sender">{{ m.sender_name }}</div>
+                <div class="bubble-content">{{ m.message }}</div>
+                <div class="bubble-time">{{ m.created_at.strftime('%I:%M %p') }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <form class="chat-input-bar" method="POST" action="{{ url_for('admin.send_chat', user_id=active_chat) }}">
+            <input type="text" name="message" placeholder="Type your message..." autocomplete="off" required>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+        <script>
+            const chatBox = document.getElementById('chatMessages');
+            if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+        </script>
+        {% else %}
+        <div class="empty-state">
+            <span class="empty-icon">💬</span>
+            <p>Select a conversation or start a new chat!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# ── New Chat Modal ── #}
+<div class="book-modal-overlay" id="newChatModal" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="book-modal">
+        <button class="modal-close"
+            onclick="document.getElementById('newChatModal').classList.remove('show')">×</button>
+        <h2>Start a New Chat</h2>
+        <p class="modal-author">Select a user to chat with</p>
+        <div class="new-chat-user-list">
+            {% for u in all_users %}
+            <a href="{{ url_for('admin.chat_with_user', user_id=u.id) }}" class="chat-user-item">
+                <span class="chat-user-avatar">{{ u.name[0] }}</span>
+                <div class="chat-user-info">
+                    <span class="chat-user-name">{{ u.name }}</span>
+                    <small>{{ u.role | capitalize }} · {{ u.email }}</small>
+                </div>
+            </a>
+            {% endfor %}
+            {% if not all_users %}
+            <p class="chat-empty">No other users registered yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

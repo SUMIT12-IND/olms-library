@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+<div class="section-header">
+    <h3>Your Notifications</h3>
+    {% if notifications %}
+    <form method="POST" action="{{ url_for('user.read_all_notifications') }}">
+        <button type="submit" class="btn btn-secondary btn-sm">Mark All Read</button>
+    </form>
+    {% endif %}
+</div>
+
+{% if notifications %}
+<div class="notification-list">
+    {% for n in notifications %}
+    <div class="notification-card {% if not n.is_read %}unread{% endif %} notif-{{ n.notif_type }}">
+        <div class="notif-content">
+            <h4>{{ n.title }}</h4>
+            <p>{{ n.message }}</p>
+            <small class="notif-date">{{ n.created_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+        </div>
+        {% if not n.is_read %}
+        <form method="POST" action="{{ url_for('user.read_notification', notif_id=n.id) }}">
+            <button type="submit" class="btn btn-sm" title="Mark as read">✓</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <span class="empty-icon">🔔</span>
+    <p>No notifications yet.</p>
+</div>
+{% endif %}
+{% endblock %}

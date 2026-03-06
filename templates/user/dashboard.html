@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<!-- Stats Row -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-icon">📖</span>
+        <div class="stat-info">
+            <span class="stat-value">{{ active_books|length }}</span>
+            <span class="stat-label">Active Books</span>
+        </div>
+    </div>
+    <div class="stat-card stat-warning">
+        <span class="stat-icon">⚠️</span>
+        <div class="stat-info">
+            <span class="stat-value">{{ overdue_books|length }}</span>
+            <span class="stat-label">Overdue</span>
+        </div>
+    </div>
+    <div class="stat-card stat-info">
+        <span class="stat-icon">📝</span>
+        <div class="stat-info">
+            <span class="stat-value">{{ requested_books|length }}</span>
+            <span class="stat-label">Pending Requests</span>
+        </div>
+    </div>
+    <div class="stat-card stat-danger">
+        <span class="stat-icon">💰</span>
+        <div class="stat-info">
+            <span class="stat-value">Rs. {{ "%.0f"|format(total_fine) }}</span>
+            <span class="stat-label">Unpaid Fines</span>
+        </div>
+    </div>
+</div>
+
+<!-- Overdue Alert -->
+{% if overdue_books %}
+<div class="alert alert-warning">
+    <strong>⚠️ You have {{ overdue_books|length }} overdue book(s)!</strong> Please return them to avoid additional
+    fines.
+</div>
+{% endif %}
+
+<!-- Active Books -->
+{% if active_books %}
+<div class="section">
+    <h3 class="section-title">Currently Issued</h3>
+    <div class="card-grid">
+        {% for b in active_books %}
+        <div class="book-card {% if b.overdue_days > 0 %}overdue{% endif %}">
+            <h4>{{ b.book_title }}</h4>
+            <p class="book-author">{{ b.book_author }}</p>
+            <div class="book-meta">
+                <span>Due: {{ b.due_date.strftime('%b %d, %Y') }}</span>
+                {% if b.overdue_days > 0 %}
+                <span class="badge badge-danger">{{ b.overdue_days }} days overdue</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Recommended For You (Feature 7) -->
+{% if recommendations %}
+<div class="section">
+    <h3 class="section-title">📚 Recommended For You</h3>
+    <div class="book-scroll">
+        {% for b in recommendations %}
+        <div class="book-scroll-card">
+            <div class="scroll-card-top">
+                <h4>{{ b.title }}</h4>
+                <p>{{ b.author }}</p>
+            </div>
+            <div class="scroll-card-bottom">
+                <span class="badge">{{ b.category }}</span>
+                <span class="avail">{{ b.available_quantity }} left</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Trending Books -->
+{% if trending %}
+<div class="section">
+    <h3 class="section-title">🔥 Trending This Month</h3>
+    <div class="book-scroll">
+        {% for b in trending %}
+        <div class="book-scroll-card trending">
+            <h4>{{ b.title }}</h4>
+            <p>{{ b.author }}</p>
+            <span class="badge badge-accent">{{ b.recent_borrows }} borrows</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Most Borrowed -->
+{% if most_borrowed %}
+<div class="section">
+    <h3 class="section-title">⭐ All-Time Most Borrowed</h3>
+    <div class="book-scroll">
+        {% for b in most_borrowed %}
+        <div class="book-scroll-card">
+            <h4>{{ b.title }}</h4>
+            <p>{{ b.author }}</p>
+            <span class="badge">{{ b.borrow_count }} total borrows</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

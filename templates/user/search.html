@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Search Books{% endblock %}
+{% block page_title %}Search Books{% endblock %}
+{% block content %}
+<div class="search-wrapper">
+    <form class="advanced-search-form" method="GET" action="{{ url_for('user.search') }}">
+        <div class="search-bar-row">
+            <div class="search-input-wrapper">
+                <input type="text" name="q" id="searchInput" value="{{ query }}"
+                    placeholder="Search by title, author, category, or ISBN..." autocomplete="off">
+                <div class="autocomplete-dropdown" id="autoDropdown"></div>
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+        <div class="search-filters">
+            <select name="search_by">
+                <option value="all" {% if search_by=='all' %}selected{% endif %}>All Fields</option>
+                <option value="title" {% if search_by=='title' %}selected{% endif %}>Title</option>
+                <option value="author" {% if search_by=='author' %}selected{% endif %}>Author</option>
+                <option value="category" {% if search_by=='category' %}selected{% endif %}>Category</option>
+                <option value="isbn" {% if search_by=='isbn' %}selected{% endif %}>ISBN</option>
+            </select>
+            <select name="category">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if category_filter==cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+            <select name="sort_by">
+                <option value="title" {% if sort_by=='title' %}selected{% endif %}>Sort by Title</option>
+                <option value="author" {% if sort_by=='author' %}selected{% endif %}>Sort by Author</option>
+                <option value="popular" {% if sort_by=='popular' %}selected{% endif %}>Most Popular</option>
+                <option value="newest" {% if sort_by=='newest' %}selected{% endif %}>Newest First</option>
+            </select>
+            <label class="checkbox-label">
+                <input type="checkbox" name="available_only" value="1" {% if available_only %}checked{% endif %}>
+                Available only
+            </label>
+        </div>
+    </form>
+</div>
+
+{% if books %}
+<div class="search-results-count">Showing {{ books|length }} result(s)</div>
+<div class="card-grid">
+    {% for book in books %}
+    <div class="book-card search-result-card">
+        <div class="book-card-header">
+            <h4>{{ book.title }}</h4>
+            <span class="badge">{{ book.category }}</span>
+        </div>
+        <p class="book-author">by {{ book.author }}</p>
+        <p class="book-isbn">ISBN: {{ book.isbn }}</p>
+        <div class="book-card-footer">
+            <span class="availability {% if book.available_quantity > 0 %}available{% else %}unavailable{% endif %}">
+                {{ book.available_quantity }}/{{ book.quantity }} available
+            </span>
+            {% if book.available_quantity > 0 %}
+            <form method="POST" action="{{ url_for('user.request_book_route', book_id=book.id) }}">
+                <button type="submit" class="btn btn-primary btn-sm">Request</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% elif query %}
+<div class="empty-state">
+    <span class="empty-icon">🔍</span>
+    <p>No books found for "{{ query }}".</p>
+</div>
+{% else %}
+<div class="empty-state">
+    <span class="empty-icon">📚</span>
+    <p>Enter a search query to find books.</p>
+</div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+{% endblock %}

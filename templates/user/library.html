@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Virtual Library{% endblock %}
+{% block page_title %}Virtual Library{% endblock %}
+{% block content %}
+<div class="library-filters">
+    <button class="lib-filter active" data-cat="all" onclick="filterShelf('all', this)">All</button>
+    {% for cat in categories %}
+    <button class="lib-filter" data-cat="{{ cat }}" onclick="filterShelf('{{ cat }}', this)">{{ cat }}</button>
+    {% endfor %}
+</div>
+
+<div class="bookshelf-container">
+    {% for book in books %}
+    <div class="book-spine" data-category="{{ book.category }}" onclick="openBookModal(this)"
+        data-title="{{ book.title }}" data-author="{{ book.author }}" data-isbn="{{ book.isbn }}"
+        data-category-name="{{ book.category }}" data-available="{{ book.available_quantity }}"
+        data-total="{{ book.quantity }}" data-id="{{ book.id }}">
+        <div class="spine-label">
+            <span class="spine-title">{{ book.title[:20] }}</span>
+            <span class="spine-author">{{ book.author[:15] }}</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Book Detail Modal -->
+<div class="book-modal-overlay" id="bookModal" onclick="if(event.target===this)closeBookModal()">
+    <div class="book-modal">
+        <button class="modal-close" onclick="closeBookModal()">×</button>
+        <div class="modal-book-cover"></div>
+        <h2 id="modalTitle"></h2>
+        <p class="modal-author" id="modalAuthor"></p>
+        <div class="modal-details">
+            <span class="modal-badge" id="modalCategory"></span>
+            <span class="modal-isbn" id="modalIsbn"></span>
+        </div>
+        <div class="modal-availability">
+            <span id="modalAvailability"></span>
+        </div>
+        <form method="POST" id="modalRequestForm">
+            <button type="submit" class="btn btn-primary" id="modalRequestBtn">Request This Book</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function filterShelf(category, btn) {
+        document.querySelectorAll('.lib-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.book-spine').forEach(spine => {
+            spine.style.display = (category === 'all' || spine.dataset.category === category) ? '' : 'none';
+        });
+    }
+
+    function openBookModal(el) {
+        const modal = document.getElementById('bookModal');
+        document.getElementById('modalTitle').textContent = el.dataset.title;
+        document.getElementById('modalAuthor').textContent = 'by ' + el.dataset.author;
+        document.getElementById('modalCategory').textContent = el.dataset.categoryName;
+        document.getElementById('modalIsbn').textContent = 'ISBN: ' + el.dataset.isbn;
+        const avail = parseInt(el.dataset.available);
+        const total = parseInt(el.dataset.total);
+        document.getElementById('modalAvailability').textContent = avail + ' / ' + total + ' available';
+        document.getElementById('modalAvailability').className = avail > 0 ? 'available' : 'unavailable';
+
+        const form = document.getElementById('modalRequestForm');
+        form.action = '/user/request/' + el.dataset.id;
+        const btn = document.getElementById('modalRequestBtn');
+        btn.disabled = (avail === 0);
+        btn.textContent = avail > 0 ? 'Request This Book' : 'Not Available';
+
+        modal.classList.add('show');
+    }
+
+    function closeBookModal() {
+        document.getElementById('bookModal').classList.remove('show');
+    }
+</script>
+{% endblock %}

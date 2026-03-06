@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}QR Scanner{% endblock %}
+{% block page_title %}QR Code Scanner{% endblock %}
+{% block content %}
+<div class="scanner-wrapper">
+    <div class="scanner-panel">
+        <h3>Scan Book QR Code</h3>
+        <div class="scanner-viewport" id="scannerViewport">
+            <video id="scannerVideo" autoplay playsinline></video>
+            <canvas id="scannerCanvas" style="display:none"></canvas>
+            <div class="scanner-overlay">
+                <div class="scanner-frame"></div>
+            </div>
+        </div>
+        <div class="scanner-controls">
+            <button class="btn btn-primary" id="startScanBtn" onclick="startScanner()">Start Camera</button>
+            <button class="btn btn-secondary" id="stopScanBtn" onclick="stopScanner()" style="display:none">Stop
+                Camera</button>
+        </div>
+        <p class="scanner-hint">Point camera at a book's QR code to scan it.</p>
+    </div>
+
+    <div class="scanner-result" id="scanResult" style="display:none">
+        <h3>Scanned Book</h3>
+        <div class="scanned-book-info">
+            <p><strong>Title:</strong> <span id="scannedTitle"></span></p>
+            <p><strong>Author:</strong> <span id="scannedAuthor"></span></p>
+            <p><strong>ISBN:</strong> <span id="scannedIsbn"></span></p>
+            <p><strong>Available:</strong> <span id="scannedAvailable"></span></p>
+        </div>
+        <div class="scanner-actions">
+            <label>User ID: <input type="number" id="scanUserId" min="1" placeholder="Enter user ID"></label>
+            <button class="btn btn-success" onclick="issueViaQR()">Issue Book</button>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/qr-scanner.js') }}"></script>
+{% endblock %}

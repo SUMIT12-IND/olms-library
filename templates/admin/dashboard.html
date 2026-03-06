@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card stat-books">
+        <div class="stat-icon">📖</div>
+        <div class="stat-info">
+            <span class="stat-value">{{ stats.total_books }}</span>
+            <span class="stat-label">Total Titles</span>
+        </div>
+    </div>
+    <div class="stat-card stat-copies">
+        <div class="stat-icon">📚</div>
+        <div class="stat-info">
+            <span class="stat-value">{{ stats.total_copies }}</span>
+            <span class="stat-label">Total Copies</span>
+        </div>
+    </div>
+    <div class="stat-card stat-users">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+            <span class="stat-value">{{ stats.total_users }}</span>
+            <span class="stat-label">Registered Users</span>
+        </div>
+    </div>
+    <div class="stat-card stat-issued">
+        <div class="stat-icon">📤</div>
+        <div class="stat-info">
+            <span class="stat-value">{{ stats.books_issued }}</span>
+            <span class="stat-label">Books Issued</span>
+        </div>
+    </div>
+    <div class="stat-card stat-overdue">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-info">
+            <span class="stat-value">{{ stats.overdue_books }}</span>
+            <span class="stat-label">Overdue</span>
+        </div>
+    </div>
+    <div class="stat-card stat-requests">
+        <div class="stat-icon">📩</div>
+        <div class="stat-info">
+            <span class="stat-value">{{ stats.pending_requests }}</span>
+            <span class="stat-label">Pending Requests</span>
+        </div>
+    </div>
+</div>
+
+{% if requests %}
+<div class="card">
+    <div class="card-header">
+        <h3>📩 Pending Book Requests</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Book</th>
+                    <th>Author</th>
+                    <th>Available</th>
+                    <th>Requested On</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>{{ req.user_name }} <span class="text-muted">({{ req.user_email }})</span></td>
+                    <td><strong>{{ req.book_title }}</strong></td>
+                    <td>{{ req.book_author }}</td>
+                    <td>
+                        <span class="badge {{ 'badge-success' if req.available_quantity > 0 else 'badge-danger' }}">
+                            {{ req.available_quantity }}
+                        </span>
+                    </td>
+                    <td>{{ req.created_at.strftime('%d %b %Y') }}</td>
+                    <td class="action-cell">
+                        <form method="POST" action="{{ url_for('admin.approve_request_route', issued_id=req.id) }}"
+                            style="display:inline">
+                            <button type="submit" class="btn btn-sm btn-success" title="Approve">✓ Approve</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin.reject_request_route', issued_id=req.id) }}"
+                            style="display:inline">
+                            <button type="submit" class="btn btn-sm btn-danger" title="Reject">✗ Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if overdue %}
+<div class="card">
+    <div class="card-header">
+        <h3>⚠️ Overdue Books</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Book</th>
+                    <th>Due Date</th>
+                    <th>Overdue By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in overdue %}
+                <tr>
+                    <td>{{ item.user_name }}</td>
+                    <td>{{ item.book_title }}</td>
+                    <td>{{ item.due_date.strftime('%d %b %Y') }}</td>
+                    <td><span class="badge badge-danger">{{ item.overdue_days }} days</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

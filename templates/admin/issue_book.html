@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Issue Book{% endblock %}
+{% block page_title %}Issue Book to User{% endblock %}
+
+{% block content %}
+<div class="card form-card">
+    <form method="POST" class="styled-form" id="issue-book-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="user_id">Select User</label>
+                <select id="user_id" name="user_id" required>
+                    <option value="">-- Choose a user --</option>
+                    {% for u in users %}
+                    {% if not u.is_blocked %}
+                    <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="book_id">Select Book</label>
+                <select id="book_id" name="book_id" required>
+                    <option value="">-- Choose a book --</option>
+                    {% for b in books %}
+                    {% if b.available_quantity > 0 %}
+                    <option value="{{ b.id }}">{{ b.title }} — {{ b.author }} ({{ b.available_quantity }} available)
+                    </option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="due_days">Loan Period (days)</label>
+                <input type="number" id="due_days" name="due_days" value="14" min="1" max="90">
+            </div>
+            <div class="form-group"></div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Issue Book</button>
+            <a href="{{ url_for('admin.reports') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

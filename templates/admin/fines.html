@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Fines Management{% endblock %}
+{% block page_title %}Fines Management{% endblock %}
+{% block content %}
+<div class="section-header">
+    <h3>All Fines (Rs. 5/day overdue)</h3>
+    <input type="text" id="fineSearch" class="table-search" placeholder="Search fines..."
+        oninput="filterTable('fineSearch','fineTable')">
+</div>
+
+{% if fines %}
+<div class="table-responsive">
+    <table class="data-table" id="fineTable">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Book</th>
+                <th>Due Date</th>
+                <th>Days Overdue</th>
+                <th>Fine (Rs.)</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in fines %}
+            <tr>
+                <td>{{ f.user_name }}<br><small>{{ f.user_email }}</small></td>
+                <td>{{ f.book_title }}</td>
+                <td>{{ f.due_date.strftime('%b %d, %Y') if f.due_date else '-' }}</td>
+                <td><span class="badge badge-danger">{{ f.overdue_days }} days</span></td>
+                <td><strong>Rs. {{ "%.2f"|format(f.amount) }}</strong></td>
+                <td>
+                    {% if f.is_paid %}
+                    <span class="badge badge-success">Paid</span>
+                    {% else %}
+                    <span class="badge badge-danger">Unpaid</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not f.is_paid %}
+                    <form method="POST" action="{{ url_for('admin.pay_fine_route', fine_id=f.id) }}"
+                        style="display:inline">
+                        <button type="submit" class="btn btn-success btn-sm">Mark Paid</button>
+                    </form>
+                    {% else %}
+                    <small>{{ f.paid_at.strftime('%b %d') if f.paid_at else '' }}</small>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <span class="empty-icon">💰</span>
+    <p>No fines recorded.</p>
+</div>
+{% endif %}
+{% endblock %}

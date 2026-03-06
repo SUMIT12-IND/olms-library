@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Issue Reports{% endblock %}
+
+{% block content %}
+{% if overdue %}
+<div class="card card-warning">
+    <div class="card-header">
+        <h3>⚠️ Overdue Books ({{ overdue|length }})</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Book</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Overdue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in overdue %}
+                <tr class="row-overdue">
+                    <td>{{ item.user_name }}</td>
+                    <td>{{ item.user_email }}</td>
+                    <td><strong>{{ item.book_title }}</strong></td>
+                    <td>{{ item.issue_date.strftime('%d %b %Y') }}</td>
+                    <td>{{ item.due_date.strftime('%d %b %Y') }}</td>
+                    <td><span class="badge badge-danger">{{ item.overdue_days }} days</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h3>📋 All Issued Books</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Book</th>
+                    <th>ISBN</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Return Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in issued %}
+                <tr class="{{ 'row-overdue' if item.overdue_days > 0 and item.status == 'issued' else '' }}">
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.user_name }}</td>
+                    <td><strong>{{ item.book_title }}</strong></td>
+                    <td><code>{{ item.book_isbn }}</code></td>
+                    <td>{{ item.issue_date.strftime('%d %b %Y') if item.issue_date else '—' }}</td>
+                    <td>{{ item.due_date.strftime('%d %b %Y') if item.due_date else '—' }}</td>
+                    <td>{{ item.return_date.strftime('%d %b %Y') if item.return_date else '—' }}</td>
+                    <td>
+                        {% if item.status == 'returned' %}
+                        <span class="badge badge-success">Returned</span>
+                        {% elif item.status == 'requested' %}
+                        <span class="badge badge-info">Requested</span>
+                        {% elif item.overdue_days > 0 %}
+                        <span class="badge badge-danger">Overdue ({{ item.overdue_days }}d)</span>
+                        {% else %}
+                        <span class="badge badge-warning">Issued</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.status == 'issued' %}
+                        <form method="POST" action="{{ url_for('admin.return_book_route', issued_id=item.id) }}">
+                            <button type="submit" class="btn btn-sm btn-success">Return</button>
+                        </form>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="empty-state">No issued book records.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
