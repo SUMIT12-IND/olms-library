@@ -68,7 +68,7 @@ def block_user(user_id, block=True):
     conn = get_db()
     cursor = conn.cursor()
     try:
-        cursor.execute("UPDATE users SET is_blocked = %s WHERE id = %s", (1 if block else 0, user_id))
+        cursor.execute("UPDATE users SET is_blocked = %s WHERE id = %s", (True if block else False, user_id))
         conn.commit()
     finally:
         cursor.close()

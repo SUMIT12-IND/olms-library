@@ -37,7 +37,7 @@ def get_unread_count(user_id):
     cursor = get_dict_cursor(conn)
     try:
         cursor.execute(
-            "SELECT COUNT(*) AS cnt FROM notifications WHERE user_id = %s AND is_read = 0",
+            "SELECT COUNT(*) AS cnt FROM notifications WHERE user_id = %s AND is_read = FALSE",
             (user_id,)
         )
         return cursor.fetchone()['cnt']
@@ -52,7 +52,7 @@ def mark_read(notification_id, user_id):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "UPDATE notifications SET is_read = 1 WHERE id = %s AND user_id = %s",
+            "UPDATE notifications SET is_read = TRUE WHERE id = %s AND user_id = %s",
             (notification_id, user_id)
         )
         conn.commit()
@@ -67,7 +67,7 @@ def mark_all_read(user_id):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "UPDATE notifications SET is_read = 1 WHERE user_id = %s",
+            "UPDATE notifications SET is_read = TRUE WHERE user_id = %s",
             (user_id,)
         )
         conn.commit()

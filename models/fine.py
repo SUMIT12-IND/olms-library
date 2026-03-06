@@ -33,7 +33,7 @@ def calculate_and_update_fines():
         for record in overdue:
             amount = round(record['overdue_days'] * FINE_PER_DAY, 2)
             cursor.execute(
-                "SELECT id FROM fines WHERE issued_book_id = %s AND is_paid = 0",
+                "SELECT id FROM fines WHERE issued_book_id = %s AND is_paid = FALSE",
                 (record['issued_book_id'],)
             )
             existing = cursor.fetchone()
@@ -101,7 +101,7 @@ def mark_fine_paid(fine_id):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "UPDATE fines SET is_paid = 1, paid_at = NOW() WHERE id = %s",
+            "UPDATE fines SET is_paid = TRUE, paid_at = NOW() WHERE id = %s",
             (fine_id,)
         )
         conn.commit()
@@ -116,7 +116,7 @@ def get_user_total_unpaid(user_id):
     cursor = get_dict_cursor(conn)
     try:
         cursor.execute(
-            "SELECT COALESCE(SUM(amount), 0) AS total FROM fines WHERE user_id = %s AND is_paid = 0",
+            "SELECT COALESCE(SUM(amount), 0) AS total FROM fines WHERE user_id = %s AND is_paid = FALSE",
             (user_id,)
         )
         return float(cursor.fetchone()['total'])

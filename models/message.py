@@ -58,7 +58,7 @@ def get_user_chats(my_id):
     try:
         cursor.execute("""
             SELECT DISTINCT u.id, u.name, u.email, u.role,
-                   (SELECT COUNT(*) FROM messages WHERE sender_id = u.id AND receiver_id = %s AND is_read = 0) AS unread
+                   (SELECT COUNT(*) FROM messages WHERE sender_id = u.id AND receiver_id = %s AND is_read = FALSE) AS unread
             FROM users u
             JOIN messages m ON (m.sender_id = u.id OR m.receiver_id = u.id)
             WHERE u.id != %s
@@ -81,7 +81,7 @@ def get_all_users_for_chat(my_id):
     try:
         cursor.execute("""
             SELECT id, name, email, role FROM users
-            WHERE id != %s AND is_blocked = 0
+            WHERE id != %s AND is_blocked = FALSE
             ORDER BY name ASC
         """, (my_id,))
         return cursor.fetchall()
@@ -96,7 +96,7 @@ def mark_messages_read(sender_id, receiver_id):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "UPDATE messages SET is_read = 1 WHERE sender_id = %s AND receiver_id = %s",
+            "UPDATE messages SET is_read = TRUE WHERE sender_id = %s AND receiver_id = %s",
             (sender_id, receiver_id)
         )
         conn.commit()
@@ -111,7 +111,7 @@ def get_unread_message_count(user_id):
     cursor = get_dict_cursor(conn)
     try:
         cursor.execute(
-            "SELECT COUNT(*) AS cnt FROM messages WHERE receiver_id = %s AND is_read = 0",
+            "SELECT COUNT(*) AS cnt FROM messages WHERE receiver_id = %s AND is_read = FALSE",
             (user_id,)
         )
         return cursor.fetchone()['cnt']
