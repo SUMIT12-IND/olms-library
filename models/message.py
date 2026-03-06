@@ -1,4 +1,4 @@
-from models import get_db
+from models import get_db, get_dict_cursor
 
 
 def send_message(sender_id, receiver_id, message):
@@ -20,7 +20,7 @@ def send_message(sender_id, receiver_id, message):
 def get_conversation(user_id, other_id):
     """Get messages between two users."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT m.*, 
@@ -41,7 +41,7 @@ def get_conversation(user_id, other_id):
 def get_admin_id():
     """Get the first admin user id."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("SELECT id FROM users WHERE role = 'admin' LIMIT 1")
         admin = cursor.fetchone()
@@ -54,7 +54,7 @@ def get_admin_id():
 def get_user_chats(my_id):
     """Get list of users who have chatted with this user (admin or regular)."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT DISTINCT u.id, u.name, u.email, u.role,
@@ -77,7 +77,7 @@ def get_user_chats(my_id):
 def get_all_users_for_chat(my_id):
     """Get all users (except self) available to start a new chat with."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT id, name, email, role FROM users
@@ -108,7 +108,7 @@ def mark_messages_read(sender_id, receiver_id):
 def get_unread_message_count(user_id):
     """Get total unread message count for a user."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute(
             "SELECT COUNT(*) AS cnt FROM messages WHERE receiver_id = %s AND is_read = 0",

@@ -1,11 +1,11 @@
 from datetime import date, timedelta
-from models import get_db
+from models import get_db, get_dict_cursor
 
 
 def issue_book(user_id, book_id, due_days=14):
     """Issue a book to a user. Default loan period is 14 days."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         # Check availability
         cursor.execute("SELECT available_quantity FROM books WHERE id = %s", (book_id,))
@@ -37,7 +37,7 @@ def issue_book(user_id, book_id, due_days=14):
 def return_book(issued_id):
     """Mark a book as returned."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("SELECT * FROM issued_books WHERE id = %s AND return_date IS NULL", (issued_id,))
         record = cursor.fetchone()
@@ -65,7 +65,7 @@ def return_book(issued_id):
 def approve_request(issued_id, due_days=14):
     """Approve a book request – change status from 'requested' to 'issued'."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("SELECT * FROM issued_books WHERE id = %s AND status = 'requested'", (issued_id,))
         record = cursor.fetchone()
@@ -117,7 +117,7 @@ def reject_request(issued_id):
 def request_book(user_id, book_id):
     """User requests a book issue (pending admin approval)."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         # Check if user already has an active issue or request for this book
         cursor.execute(
@@ -144,13 +144,13 @@ def request_book(user_id, book_id):
 def get_all_issued_books():
     """Get all issued/requested books with user and book info."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT ib.*, u.name AS user_name, u.email AS user_email,
                    b.title AS book_title, b.author AS book_author, b.isbn AS book_isbn,
                    CASE
-                       WHEN ib.status = 'issued' AND ib.due_date < CURDATE() THEN DATEDIFF(CURDATE(), ib.due_date)
+                       WHEN ib.status = 'issued' AND ib.due_date < CURRENT_DATE THEN CAST(CURRENT_DATE - ib.due_date AS INTEGER)
                        ELSE 0
                    END AS overdue_days
             FROM issued_books ib
@@ -167,12 +167,12 @@ def get_all_issued_books():
 def get_user_issued_books(user_id):
     """Get all books issued to a specific user."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT ib.*, b.title AS book_title, b.author AS book_author, b.isbn AS book_isbn,
                    CASE
-                       WHEN ib.status = 'issued' AND ib.due_date < CURDATE() THEN DATEDIFF(CURDATE(), ib.due_date)
+                       WHEN ib.status = 'issued' AND ib.due_date < CURRENT_DATE THEN CAST(CURRENT_DATE - ib.due_date AS INTEGER)
                        ELSE 0
                    END AS overdue_days
             FROM issued_books ib
@@ -189,16 +189,16 @@ def get_user_issued_books(user_id):
 def get_overdue_books():
     """Get all overdue books (issued and past due date)."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT ib.*, u.name AS user_name, u.email AS user_email,
                    b.title AS book_title, b.author AS book_author,
-                   DATEDIFF(CURDATE(), ib.due_date) AS overdue_days
+                   CAST(CURRENT_DATE - ib.due_date AS INTEGER) AS overdue_days
             FROM issued_books ib
             JOIN users u ON ib.user_id = u.id
             JOIN books b ON ib.book_id = b.id
-            WHERE ib.status = 'issued' AND ib.due_date < CURDATE()
+            WHERE ib.status = 'issued' AND ib.due_date < CURRENT_DATE
             ORDER BY overdue_days DESC
         """)
         return cursor.fetchall()
@@ -210,7 +210,7 @@ def get_overdue_books():
 def get_dashboard_stats():
     """Get summary stats for admin dashboard."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         stats = {}
         cursor.execute("SELECT COUNT(*) AS total FROM books")
@@ -225,7 +225,7 @@ def get_dashboard_stats():
         cursor.execute("SELECT COUNT(*) AS total FROM issued_books WHERE status = 'issued'")
         stats['books_issued'] = cursor.fetchone()['total']
 
-        cursor.execute("SELECT COUNT(*) AS total FROM issued_books WHERE status = 'issued' AND due_date < CURDATE()")
+        cursor.execute("SELECT COUNT(*) AS total FROM issued_books WHERE status = 'issued' AND due_date < CURRENT_DATE")
         stats['overdue_books'] = cursor.fetchone()['total']
 
         cursor.execute("SELECT COUNT(*) AS total FROM issued_books WHERE status = 'requested'")
@@ -240,7 +240,7 @@ def get_dashboard_stats():
 def get_pending_requests():
     """Get all pending book requests."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT ib.*, u.name AS user_name, u.email AS user_email,

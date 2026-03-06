@@ -1,5 +1,5 @@
 from datetime import date
-from models import get_db
+from models import get_db, get_dict_cursor
 
 FINE_PER_DAY = 5.00  # Rs. 5 per day
 
@@ -7,13 +7,13 @@ FINE_PER_DAY = 5.00  # Rs. 5 per day
 def calculate_and_update_fines():
     """Calculate fines for all overdue books and upsert into fines table."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT ib.id AS issued_book_id, ib.user_id, ib.due_date,
-                   DATEDIFF(CURDATE(), ib.due_date) AS overdue_days
+                   CAST(CURRENT_DATE - ib.due_date AS INTEGER) AS overdue_days
             FROM issued_books ib
-            WHERE ib.status = 'issued' AND ib.due_date < CURDATE()
+            WHERE ib.status = 'issued' AND ib.due_date < CURRENT_DATE
         """)
         overdue = cursor.fetchall()
 
@@ -23,8 +23,8 @@ def calculate_and_update_fines():
             cursor.execute("""
                 INSERT INTO fines (user_id, issued_book_id, amount)
                 VALUES (%s, %s, %s)
-                ON DUPLICATE KEY UPDATE amount = %s
-            """, (record['user_id'], record['issued_book_id'], amount, amount))
+                ON CONFLICT (user_id, issued_book_id) DO UPDATE SET amount = EXCLUDED.amount
+            """, (record['user_id'], record['issued_book_id'], amount))
 
         conn.commit()
     except Exception:
@@ -56,12 +56,12 @@ def calculate_and_update_fines():
 def get_user_fines(user_id):
     """Get all fines for a user."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT f.*, b.title AS book_title, b.author AS book_author,
                    ib.due_date, ib.return_date,
-                   DATEDIFF(CURDATE(), ib.due_date) AS overdue_days
+                   CAST(CURRENT_DATE - ib.due_date AS INTEGER) AS overdue_days
             FROM fines f
             JOIN issued_books ib ON f.issued_book_id = ib.id
             JOIN books b ON ib.book_id = b.id
@@ -77,12 +77,12 @@ def get_user_fines(user_id):
 def get_all_fines():
     """Get all fines (admin view)."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT f.*, u.name AS user_name, u.email AS user_email,
                    b.title AS book_title, ib.due_date,
-                   DATEDIFF(CURDATE(), ib.due_date) AS overdue_days
+                   CAST(CURRENT_DATE - ib.due_date AS INTEGER) AS overdue_days
             FROM fines f
             JOIN users u ON f.user_id = u.id
             JOIN issued_books ib ON f.issued_book_id = ib.id
@@ -113,7 +113,7 @@ def mark_fine_paid(fine_id):
 def get_user_total_unpaid(user_id):
     """Get total unpaid fine amount for a user."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute(
             "SELECT COALESCE(SUM(amount), 0) AS total FROM fines WHERE user_id = %s AND is_paid = 0",

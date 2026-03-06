@@ -1,5 +1,5 @@
 import bcrypt
-from models import get_db
+from models import get_db, get_dict_cursor
 
 
 def create_user(name, email, password, role='user'):
@@ -25,7 +25,7 @@ def create_user(name, email, password, role='user'):
 def get_user_by_email(email):
     """Fetch a user by email."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         return cursor.fetchone()
@@ -37,7 +37,7 @@ def get_user_by_email(email):
 def get_user_by_id(user_id):
     """Fetch a user by ID."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         return cursor.fetchone()
@@ -49,7 +49,7 @@ def get_user_by_id(user_id):
 def get_all_users():
     """Fetch all non-admin users."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("SELECT id, name, email, is_blocked, created_at FROM users WHERE role = 'user' ORDER BY created_at DESC")
         return cursor.fetchall()

@@ -1,4 +1,4 @@
-from models import get_db
+from models import get_db, get_dict_cursor
 
 
 def create_notification(user_id, title, message, notif_type='info'):
@@ -19,7 +19,7 @@ def create_notification(user_id, title, message, notif_type='info'):
 def get_user_notifications(user_id, limit=20):
     """Get notifications for a user."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute(
             "SELECT * FROM notifications WHERE user_id = %s ORDER BY created_at DESC LIMIT %s",
@@ -34,7 +34,7 @@ def get_user_notifications(user_id, limit=20):
 def get_unread_count(user_id):
     """Get unread notification count."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute(
             "SELECT COUNT(*) AS cnt FROM notifications WHERE user_id = %s AND is_read = 0",

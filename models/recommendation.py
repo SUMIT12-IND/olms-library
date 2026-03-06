@@ -1,10 +1,10 @@
-from models import get_db
+from models import get_db, get_dict_cursor
 
 
 def get_recommendations(user_id, limit=8):
     """Content-based recommendation: suggest books based on user's reading history (category + author matching + popularity)."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         # Get user's preferred categories and authors
         cursor.execute("""
@@ -54,13 +54,13 @@ def get_recommendations(user_id, limit=8):
 def get_trending(limit=6):
     """Get trending books (most borrowed in last 30 days)."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT b.*, COUNT(ib.id) AS recent_borrows
             FROM books b
             JOIN issued_books ib ON b.id = ib.book_id
-            WHERE ib.issue_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            WHERE ib.issue_date >= CURRENT_DATE - INTERVAL '30 days'
             GROUP BY b.id
             ORDER BY recent_borrows DESC
             LIMIT %s
@@ -74,7 +74,7 @@ def get_trending(limit=6):
 def get_most_borrowed(limit=6):
     """Get most borrowed books of all time."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("""
             SELECT * FROM books ORDER BY borrow_count DESC LIMIT %s

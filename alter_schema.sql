@@ -1,59 +1,48 @@
 -- ============================================
--- OLMS — Database Migration for New Features
--- Run after the initial schema.sql
+-- OLMS — PostgreSQL Database Migration
 -- ============================================
-
-USE olms_db;
 
 -- -------------------------------------------
 -- Notifications table (Feature 2)
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS notifications (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(200) NOT NULL,
     message TEXT NOT NULL,
-    is_read TINYINT(1) NOT NULL DEFAULT 0,
-    notif_type ENUM('info', 'warning', 'success', 'danger') DEFAULT 'info',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    notif_type VARCHAR(20) DEFAULT 'info',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- -------------------------------------------
 -- Messages table (Feature 3 – Chat)
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS messages (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    sender_id INT NOT NULL,
-    receiver_id INT NOT NULL,
+    id SERIAL PRIMARY KEY,
+    sender_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    receiver_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     message TEXT NOT NULL,
-    is_read TINYINT(1) NOT NULL DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- -------------------------------------------
 -- Fines table (Feature 5)
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS fines (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    issued_book_id INT NOT NULL,
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    issued_book_id INT NOT NULL REFERENCES issued_books(id) ON DELETE CASCADE,
     amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    is_paid TINYINT(1) NOT NULL DEFAULT 0,
+    is_paid BOOLEAN NOT NULL DEFAULT FALSE,
     paid_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (issued_book_id) REFERENCES issued_books(id) ON DELETE CASCADE
+    UNIQUE(user_id, issued_book_id)
 );
 
 -- -------------------------------------------
--- Add borrow_count to books (Feature 7)
+-- Add columns
 -- -------------------------------------------
-ALTER TABLE books ADD COLUMN borrow_count INT NOT NULL DEFAULT 0;
-
--- -------------------------------------------
--- Add qr_code to books (Feature 6)
--- -------------------------------------------
-ALTER TABLE books ADD COLUMN qr_code LONGTEXT NULL;
+ALTER TABLE books ADD COLUMN IF NOT EXISTS borrow_count INT NOT NULL DEFAULT 0;
+ALTER TABLE books ADD COLUMN IF NOT EXISTS qr_code TEXT NULL;

@@ -1,20 +1,17 @@
 -- ============================================
--- Online Library Management System - Schema
+-- Online Library Management System - PostgreSQL Schema
 -- ============================================
-
-CREATE DATABASE IF NOT EXISTS olms_db;
-USE olms_db;
 
 -- -------------------------------------------
 -- Users table (handles both admin and users)
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
-    is_blocked TINYINT(1) NOT NULL DEFAULT 0,
+    role VARCHAR(20) NOT NULL DEFAULT 'user',
+    is_blocked BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -22,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Books table
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS books (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     author VARCHAR(200) NOT NULL,
     category VARCHAR(100) NOT NULL,
@@ -36,20 +33,12 @@ CREATE TABLE IF NOT EXISTS books (
 -- Issued Books table
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS issued_books (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    book_id INT NOT NULL,
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    book_id INT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
     issue_date DATE NOT NULL,
     due_date DATE NOT NULL,
     return_date DATE DEFAULT NULL,
-    status ENUM('issued', 'returned', 'overdue', 'requested') NOT NULL DEFAULT 'issued',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    status VARCHAR(20) NOT NULL DEFAULT 'issued',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- -------------------------------------------
--- After running this schema, run setup_db.py
--- to seed the default admin account:
---   python setup_db.py
--- -------------------------------------------

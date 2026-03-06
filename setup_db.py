@@ -7,17 +7,17 @@ Usage:
 """
 
 import bcrypt
-import mysql.connector
+import psycopg2
 from config import Config
 
 
 def setup():
-    conn = mysql.connector.connect(
+    conn = psycopg2.connect(
         host=Config.MYSQL_HOST,
         port=Config.MYSQL_PORT,
         user=Config.MYSQL_USER,
         password=Config.MYSQL_PASSWORD,
-        database=Config.MYSQL_DATABASE
+        dbname=Config.MYSQL_DATABASE
     )
     cursor = conn.cursor()
 
@@ -29,7 +29,7 @@ def setup():
         cursor.execute(
             """INSERT INTO users (name, email, password_hash, role)
                VALUES (%s, %s, %s, %s)
-               ON DUPLICATE KEY UPDATE name = name""",
+               ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name""",
             ('Admin', 'admin@library.com', password_hash, 'admin')
         )
         conn.commit()

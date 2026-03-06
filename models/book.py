@@ -1,7 +1,7 @@
 import io
 import base64
 import qrcode
-from models import get_db
+from models import get_db, get_dict_cursor
 
 
 def generate_qr_code(book_id):
@@ -41,7 +41,7 @@ def add_book(title, author, category, isbn, quantity):
 def update_book(book_id, title, author, category, isbn, quantity):
     """Update an existing book's details."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         # Calculate the difference to adjust available_quantity
         cursor.execute("SELECT quantity, available_quantity FROM books WHERE id = %s", (book_id,))
@@ -81,7 +81,7 @@ def delete_book(book_id):
 def get_all_books():
     """Get all books."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("SELECT * FROM books ORDER BY title ASC")
         return cursor.fetchall()
@@ -93,7 +93,7 @@ def get_all_books():
 def get_book_by_id(book_id):
     """Get a single book by ID."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("SELECT * FROM books WHERE id = %s", (book_id,))
         return cursor.fetchone()
@@ -105,7 +105,7 @@ def get_book_by_id(book_id):
 def search_books(query, search_by='title'):
     """Search books by title, author, or category."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         allowed_fields = {'title', 'author', 'category', 'isbn'}
         if search_by not in allowed_fields:
@@ -122,7 +122,7 @@ def search_books(query, search_by='title'):
 def search_books_advanced(query='', search_by='all', available_only=False, category_filter='', sort_by='title'):
     """Advanced search with multi-field matching, filters, and sorting."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         conditions = []
         params = []
@@ -165,7 +165,7 @@ def search_books_advanced(query='', search_by='all', available_only=False, categ
 def get_all_categories():
     """Get distinct book categories."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute("SELECT DISTINCT category FROM books ORDER BY category ASC")
         return [row['category'] for row in cursor.fetchall()]
@@ -177,7 +177,7 @@ def get_all_categories():
 def autocomplete_books(query, limit=8):
     """Get autocomplete suggestions (title + author)."""
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    cursor = get_dict_cursor(conn)
     try:
         cursor.execute(
             "SELECT id, title, author, category FROM books WHERE title LIKE %s OR author LIKE %s LIMIT %s",
