@@ -9,11 +9,11 @@ def create_user(name, email, password, role='user'):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO users (name, email, password_hash, role) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO users (name, email, password_hash, role) VALUES (%s, %s, %s, %s) RETURNING id",
             (name, email, password_hash, role)
         )
         conn.commit()
-        return cursor.lastrowid
+        return cursor.fetchone()[0]
     except Exception as e:
         conn.rollback()
         raise e

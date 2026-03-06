@@ -21,10 +21,10 @@ def add_book(title, author, category, isbn, quantity):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO books (title, author, category, isbn, quantity, available_quantity) VALUES (%s, %s, %s, %s, %s, %s)",
+            "INSERT INTO books (title, author, category, isbn, quantity, available_quantity) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
             (title, author, category, isbn, quantity, quantity)
         )
-        book_id = cursor.lastrowid
+        book_id = cursor.fetchone()[0]
         # Generate and store QR code
         qr_data = generate_qr_code(book_id)
         cursor.execute("UPDATE books SET qr_code = %s WHERE id = %s", (qr_data, book_id))

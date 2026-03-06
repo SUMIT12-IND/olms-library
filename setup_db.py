@@ -7,18 +7,20 @@ Usage:
 """
 
 import bcrypt
-import psycopg2
+import psycopg
 from config import Config
+import os
+
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
+
+if DATABASE_URL:
+    conninfo = DATABASE_URL
+else:
+    conninfo = f"host={Config.MYSQL_HOST} port={Config.MYSQL_PORT} user={Config.MYSQL_USER} password={Config.MYSQL_PASSWORD} dbname={Config.MYSQL_DATABASE}"
 
 
 def setup():
-    conn = psycopg2.connect(
-        host=Config.MYSQL_HOST,
-        port=Config.MYSQL_PORT,
-        user=Config.MYSQL_USER,
-        password=Config.MYSQL_PASSWORD,
-        dbname=Config.MYSQL_DATABASE
-    )
+    conn = psycopg.connect(conninfo)
     cursor = conn.cursor()
 
     # Generate bcrypt hash for admin password

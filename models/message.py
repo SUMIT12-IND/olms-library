@@ -7,11 +7,11 @@ def send_message(sender_id, receiver_id, message):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO messages (sender_id, receiver_id, message) VALUES (%s, %s, %s)",
+            "INSERT INTO messages (sender_id, receiver_id, message) VALUES (%s, %s, %s) RETURNING id",
             (sender_id, receiver_id, message)
         )
         conn.commit()
-        return cursor.lastrowid
+        return cursor.fetchone()[0]
     finally:
         cursor.close()
         conn.close()
